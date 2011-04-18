@@ -1,13 +1,19 @@
+package migscala
+
 import scala.swing._
 import javax.swing.JPanel
 import net.miginfocom.swing.MigLayout
+import migscala._
 
 object HelloWorld extends SimpleSwingApplication {
   def top = new MainFrame {
     title = "Hello, World!"
     contents = {
       val panel = new MigPanel
-      panel.layout(new Label("Foo")) = Migs()
+      panel.layout(new Button("blah")) = Migs(grow = true, span = Span(2, 1))
+      panel.layout(new Button("foo")) = Migs(grow = true, wrap = true)
+      panel.layout(new Button("spam")) = Migs()
+      panel.layout(new Button("eggs")) = Migs()
       pack
       panel
     }
@@ -16,7 +22,7 @@ object HelloWorld extends SimpleSwingApplication {
 
 class MigPanel extends Panel with LayoutContainer {
   type Constraints = Migs
-  override lazy val peer = new JPanel(new MigLayout)
+  override lazy val peer = new JPanel(new MigLayout(new net.miginfocom.layout.LC().fill()))
   private def layoutManager = peer.getLayout.asInstanceOf[MigLayout]
 
   protected def constraintsFor(comp: Component) = layoutManager.getComponentConstraints(comp.peer).asInstanceOf[Migs]
@@ -47,7 +53,24 @@ case class Migs(
   span: Span = null,
   split: Int = 0,
   wrap: Wrap = null) {
-  def wrapping = ""
+  def wrapping = {
+    val result = new StringBuilder
+    
+    def append(s: String) =
+      result ++= {
+        if (result.isEmpty) s else ", " + s
+      }
+
+    if (grow != null)
+      append("grow " + grow.x + ' ' + grow.y)
+    if (span != null)
+      append("span " + span.x + ' ' + span.y)
+    if (wrap != null)
+      append("wrap " + wrap.gapSize)
+
+    System.out.println(result)
+    result.toString
+  }
 }
 
 case class SizeGroup(x: Int, y: Int)
@@ -64,10 +87,19 @@ case object ZeroGaps extends HideMode
 case object Disregard extends HideMode
 
 case class Grow(x: Float = 100F, y: Float = 100F)
+
+package object migscala {
+  implicit def boolean2Grow(b: Boolean): Grow = if (b) Grow() else Grow(0, 0)
+  implicit def boolean2Wrap(b: Boolean): Wrap = if (b) Wrap(Pixels(0)) else null
+}
+
 case class Gap(left: SizeUnits, right: SizeUnits, top: SizeUnits, bottom: SizeUnits)
 
 sealed trait SizeUnits
-case class Pixels(x: Int) extends SizeUnits
+case class Pixels(x: Int) extends SizeUnits {
+  override def toString = x + "px"
+}
+
 case class Millimeters(x: Int) extends SizeUnits
 
 sealed trait Flow
