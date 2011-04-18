@@ -7,7 +7,7 @@ object HelloWorld extends SimpleSwingApplication {
     title = "Hello, World!"
     contents = {
       val panel = new MigPanel
-      panel.layout(new Label("Foo")) = ""
+      panel.layout(new Label("Foo")) = Migs()
       pack
       panel
     }
@@ -15,12 +15,85 @@ object HelloWorld extends SimpleSwingApplication {
 }
 
 class MigPanel extends Panel with LayoutContainer {
-  type Constraints = String
+  type Constraints = Migs
   override lazy val peer = new JPanel(new MigLayout)
   private def layoutManager = peer.getLayout.asInstanceOf[MigLayout]
 
-  protected def constraintsFor(comp: Component) = layoutManager.getComponentConstraints(comp.peer).asInstanceOf[String]
+  protected def constraintsFor(comp: Component) = layoutManager.getComponentConstraints(comp.peer).asInstanceOf[Migs]
   
   protected def areValid(c: Constraints): (Boolean, String) = (true, "")
-  def add(c: Component, const: String) { peer.add(c.peer, const) }
+  def add(c: Component, const: Migs) { peer.add(c.peer, const.wrapping) }
 }
+
+case class Migs(
+  align: Alignment = null,
+  cell: Cell = null,
+  dock: Dock = null,
+  external: Boolean = false,
+  flow: Flow = null,
+  gap: Gap = null,
+  grow: Grow = null,
+  size: Size = null,
+  hide: HideMode = null,
+  maxSize: Size = null,
+  minSize: Size = null,
+  pad: Padding = null,
+  position: Position = null,
+  push: Push = null,
+  shrink: Shrink = null,
+  shrinkPriority: ShrinkPriority = null,
+  sizeGroup: SizeGroup = null,
+  skip: Int = 0,
+  span: Span = null,
+  split: Int = 0,
+  wrap: Wrap = null) {
+  def wrapping = ""
+}
+
+case class SizeGroup(x: Int, y: Int)
+case class ShrinkPriority(width: Int, height: Int)
+case class Shrink(width: Float, height: Float)
+case class Push(rowWeight: Float, rowHeight: Float)
+case class Position(x: Int, y: Int, x2: Int = 0, y2: Int = 0)
+case class Padding(top: Int, left: Int, bottom: Int, right: Int)
+case class Size(width: Int, height: Int)
+
+sealed trait HideMode
+case object RetainGaps extends HideMode
+case object ZeroGaps extends HideMode
+case object Disregard extends HideMode
+
+case class Grow(x: Float = 100F, y: Float = 100F)
+case class Gap(left: SizeUnits, right: SizeUnits, top: SizeUnits, bottom: SizeUnits)
+
+sealed trait SizeUnits
+case class Pixels(x: Int) extends SizeUnits
+case class Millimeters(x: Int) extends SizeUnits
+
+sealed trait Flow
+case object Horizontal extends Flow
+case object Vertical extends Flow
+
+sealed trait Dock
+case object East extends Dock
+case object North extends Dock
+case object South extends Dock
+case object West extends Dock
+
+case class Cell(column: Int, row: Int, width: Int = 1, height: Int = 1)
+
+sealed trait AlignmentX
+case class AbsoluteX(amount: SizeUnits) extends AlignmentX
+case object Left extends AlignmentX
+case object Right extends AlignmentX
+case object Leading extends AlignmentX
+case object Trailing extends AlignmentX
+
+sealed trait AlignmentY
+case class AbsoluteY(amount: SizeUnits) extends AlignmentY
+case object Top extends AlignmentY
+case object Bottom extends AlignmentY
+
+case class Alignment(x: AlignmentX = null, y: AlignmentY = null)
+case class Span(x: Int, y: Int)
+case class Wrap(gapSize: SizeUnits = null)
